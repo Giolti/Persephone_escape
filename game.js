@@ -32,7 +32,7 @@ var attackButton;
 
 function create() {
 
-    player = game.add.sprite(100, 400, 'player', 0);
+    player = game.add.sprite(100, 650, 'player', 0);
 
     player.weapon = new Phaser.Rectangle();
 
@@ -40,7 +40,7 @@ function create() {
     player.animations.add('walk', [1,2,3,4,5,6,7,8], 20);
     attackAnim = player.animations.add('attack', [9,10,11,12,13,14,15,16,17,18,19,20,21,22], 40);
     attackAnim.onStart.add(function () {player.weapon = new Phaser.Rectangle(player.x, player.y, 44, 12);}, this);
-    attackAnim.onComplete.add(function () {player.isAttacking = false; player.weapon = new Phaser.Rectangle; console.log("completed");}, this);
+    attackAnim.onComplete.add(function () {player.isAttacking = false; player.weapon = new Phaser.Rectangle;}, this);
 
     player.facingRight = true;
     player.anchor.x = 46/player.width;
@@ -52,7 +52,7 @@ function create() {
 
     platforms = game.add.physicsGroup();
 
-    platforms.create(0, 450, 'platform').scale.setTo(3);
+    platforms.create(0, 700, 'platform').scale.setTo(3);
 
     platforms.setAll('body.immovable', true);
 
@@ -74,7 +74,6 @@ function update () {
         if((player.body.onFloor() || player.body.touching.down)  && !player.isAttacking)
         {
             player.facingRight = false;
-            console.log(player.width);
             player.scale.x = -1;
             player.animations.play('walk');
         }
@@ -86,7 +85,6 @@ function update () {
         if((player.body.onFloor() || player.body.touching.down)  && !player.isAttacking)
         {
           player.facingRight = true;
-          console.log(player.width);
           player.scale.x = 1;
           player.animations.play('walk');
         }
