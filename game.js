@@ -129,4 +129,4 @@ function render () {
 
     game.debug.geom(player.weapon,'#ff0000', false);
 
-}.
+}
