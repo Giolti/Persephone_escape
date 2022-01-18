@@ -1,10 +1,11 @@
     var playState = {
     create: function() {
 
+        game.camera.flash('#000000', 500);
+
         /*init variabili*/
         camOffset = MAXCAMOFFSET;
         startJump = 0;
-        canJump = true;
 
         /*tilemap*/
         map = game.add.tilemap('map');
@@ -32,11 +33,20 @@
         player.health = PLAYER_MAXHEALTH;
         player.invincible = false;
         player.canMove = true;
+        player.canJump = true;
 
         player.facingRight = true;
-        player.jumping = false;
-        player.climbing = false;
         player.anchor.x = (42*3)/player.width;
+
+        /*stato animazioni*/
+        player.status = {
+            isWalking: false,
+            isAttacking: false,
+            isJumping: false,
+            isClimbing: false,
+            isAscending: false,
+            isDescending: false
+        }
 
         player.respawn = function(){
             player.x = 9*48;
@@ -52,10 +62,12 @@
         player.animations.add('idle', [0,1,2,3], 4);
         player.animations.add('walk', [4,5,6,7,8,9,10,11], 15);
         attackAnim = player.animations.add('attack', [12,13,14,15,16,17,18,19,20,21,22,23,24,25], 30);
+        jumpAnim = player.animations.add('jump', [26,26,26], 60);
+        player.animations.add('up', [27]);
+        player.animations.add('down', [28]);
 
         /*hitbox activation*/{
         attackAnim.onStart.add(function () {
-            //player.weapon = new Phaser.Rectangle(player.x, player.y, 44, 12);
             game.time.events.add(250, function () { hitbox.active = true; }, this);
         }, this);
         }
@@ -63,8 +75,7 @@
         /*hitbox deactivation*/{
         attackAnim.onComplete.add(function () {
             hitbox.active = false;
-            player.isAttacking = false;
-            player.animations.play('idle');
+            player.status.isAttacking = false;
             /*player.weapon = new Phaser.Rectangle;*/
 
         }, this);
@@ -99,6 +110,7 @@
         player.body.gravity.y = GRAVITY;
         player.body.offset.setTo(36*3, 16*3);
         player.body.setSize(12*3, 38*3);
+        player.body.maxVelocity.x = PLAYER_SPEED;
         }
 
         /*petali*/{
@@ -118,11 +130,11 @@
 
         }
 
-        /*platforms*/{
+        /*piattaforme*/{
         platforms = game.add.physicsGroup();
 
-        platform1 = platforms.create(50*48, 154*48, 'platform1', 0);
-        platform2 = platforms.create(45*48, 109*48, 'platform1', 0);
+        platform1 = platforms.create(50*48, 155*48, 'platform1', 0);
+        platform2 = platforms.create(45*48, 110*48, 'platform1', 0);
 
         platforms.forEach(function(plat){
             plat.animations.add('plat', [0,1,2,3], 5, true);
@@ -134,7 +146,7 @@
             plat.stop = false;
         }, this);
 
-        platform1.startX = 36*48;
+        platform1.startX = 38*48;
         platform1.endX = platform1.startX + 25*48;
 
         platform2.startX = 45*48;
@@ -253,6 +265,8 @@
             turret.weapon = game.add.weapon(20, 'turret-bullet');
             turret.weapon.trackSprite(turret, turret.width/2, 6*3);
             turret.weapon.fireRate = TURRET_FIRERATE;
+            turret.weapon.bulletKillType = Phaser.Weapon.KILL_DISTANCE;
+            turret.weapon.bulletKillDistance = 800;
 
             turret.weapon.bullets.setAll('anchor.x', 0.5);
             turret.weapon.bullets.setAll('anchor.y', 0.5);
@@ -329,6 +343,29 @@
         }, this);
         }
 
+        /*textbox inizio*/{
+            player.textbox = game.add.sprite(0, 0, 'text');
+
+            player.text = game.add.text(5, 5, "", {font: '12px lores-9-narrow', fontWeight: 700, fill: '#000000', wordWrap: true, wordWrapWidth: player.textbox.width - 10});
+            player.textbox.addChild(player.text);
+            player.text.lineSpacing = 0;
+
+            player.textbox.next = game.add.sprite(player.textbox.width - 5, player.textbox.height - 5, 'pressJ');
+            player.textbox.next.anchor.setTo(1, 1);
+            player.textbox.addChild(player.textbox.next);
+            player.textbox.next.alpha = 0;
+            player.textbox.next.animations.add('pressJ', [0,1], 2, true).play();
+
+            startText([
+                "Testo molto lungo davvero lunghissimo infinito biblico",
+                "va",
+                "qui"
+            ], player.text);
+
+            player.canMove = false;
+
+        }
+
         /*setup camera*/
         player.bringToTop();
         game.camera.focusOnXY(player.x+camOffset, player.y);
@@ -341,6 +378,106 @@
         jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         attackButton = game.input.keyboard.addKey(Phaser.Keyboard.J);
 
+        player.attack = function(){
+
+            if(player.canMove && !player.status.isAttacking && !player.status.isClimbing)
+            {
+                player.canMove = false;
+                player.canJump = false;
+                player.status.isAttacking = true;
+
+                game.time.events.add(250, function () { hitbox.active = true; }, this);
+
+                attackAnim.onComplete.add(function () {
+                    hitbox.active = false;
+                    player.canMove = true;
+                    player.status.isAttacking = false;
+                }, this);
+
+                player.animations.play('attack');
+                hitbox.scale.x = -1 + 2*player.facingRight;
+            }
+
+        }
+
+        player.jump = function(){
+            if(player.canMove && player.canJump && !player.status.isJumping && !player.status.isClimbing && !player.status.isAttacking){
+                player.status.isJumping = true;
+                jumpAnim.play();
+                game.time.events.add(85, function(){
+                    if (jumpButton.isDown){
+                        player.body.velocity.y = -PLAYER_JUMP;
+                    }
+                    else{
+                        player.body.velocity.y = -PLAYER_SHORTJUMP;
+                    }
+                    player.status.isAscending = true;
+                });
+            }
+        }
+
+        player.goRight = function(){
+            if(!player.status.isAttacking){
+                if(player.canMove){
+                    player.facingRight = true;
+                    player.scale.x = 1;
+                }
+            }else{
+                attackAnim.onComplete.addOnce(function(){
+                    player.facingRight = true;
+                    player.scale.x = 1;
+                })
+            }
+        }
+
+        player.goLeft = function(){
+            if(!player.status.isAttacking){
+                if(player.canMove){
+                    player.facingRight = false;
+                    player.scale.x = -1;
+                }
+            }else{
+                attackAnim.onComplete.addOnce(function(){
+                    player.facingRight = false;
+                    player.scale.x = -1;
+                })
+            }
+        }
+
+        player.move = function(){
+            if(player.canMove){
+                if(player.status.isJumping){
+                    player.body.velocity.x += PLAYER_ACC * (-1 + 2*player.facingRight);
+                }
+                else{
+                    if(!player.status.isAttacking){
+                        player.body.velocity.x = PLAYER_SPEED * (-1 + 2*player.facingRight);
+                        player.status.isWalking = true;
+                    }
+                }
+            }else{
+                player.stop();
+            }
+        }
+
+        player.stop = function(){
+            if(player.canJump){
+                player.body.velocity.x = 0;
+            }
+            player.status.isWalking = false;
+        }
+
+        attackButton.onDown.add(player.attack, this);
+        jumpButton.onDown.add(player.jump, this);
+
+        rightButton.onDown.add(player.goRight, this);
+        rightButton.onHoldCallback = player.move;
+        rightButton.onUp.add(player.stop);
+
+        leftButton.onDown.add(player.goLeft, this);
+        leftButton.onHoldCallback = player.move;
+        leftButton.onUp.add(player.stop);
+
         updateLife();
 
     },
@@ -349,12 +486,15 @@
 
         game.world.bringToTop(healthbar);
 
+        player.textbox.position.setTo(player.x + 80, player.y - 10);
+
         //collisioni
-        canJump = false;
-        game.physics.arcade.collide(player, layer, function(){if(player.body.blocked.down)canJump = true;});
+        player.canJump = false;
+        game.physics.arcade.collide(player, layer, function(){if(player.body.blocked.down)player.canJump = true;});
         game.physics.arcade.collide(patrols, layer);
-        game.physics.arcade.collide(player, platforms, function(){canJump = true;}, function(p, plat){
-            return ((p.body.position.y + p.body.halfHeight) <= (plat.body.position.y + 1));
+        game.physics.arcade.overlap(player, platforms);
+        game.physics.arcade.collide(player, platforms, function(){player.canJump = true;}, function(p, plat){
+            return plat.body.touching.up;
         });
 
         walls.forEach(function(wall)
@@ -441,16 +581,40 @@
             }
         }, this);
 
-        if(!game.physics.arcade.overlap(player, stairs, this.climb))
-        {
-            player.climbing = false;
+        //aggiorna stato animazioni
+
+        //salendo/scendendo
+        if(player.body.velocity.y > 0){
+            player.status.isDescending = true;
+            player.status.isAscending = false;
+        }else if(player.body.velocity.y < 0){
+            player.status.isAscending = true;
+            player.status.isDescending = false;
         }
 
-        if(player.climbing)
+        //atterraggio
+        if(player.status.isDescending && player.canJump){
+            player.status.isDescending = false;
+            player.status.isJumping = false;
+        }
+
+        //lascia liane
+        if(!game.physics.arcade.overlap(player, stairs, this.climb)){
+            player.status.isClimbing = false;
+        }
+
+        //tieni liane
+        if(player.status.isClimbing)
             player.body.gravity.y = 0;
         else
             player.body.gravity.y = GRAVITY;
 
+        //no input orizzontale
+        if(rightButton.isUp && leftButton.isUp){
+            player.stop();
+        }
+
+        /*movimento piattaforme*/{
         platforms.forEach(function(plat){
             if(plat.stop) {
                 plat.body.velocity.x = 0;
@@ -472,7 +636,9 @@
                     plat.body.velocity.x = -PLATFORM_SPEED;
             }
         }, this);
+        }
 
+        //offset camera
         if(player.facingRight)  {
 
             if(camOffset < MAXCAMOFFSET)
@@ -485,102 +651,26 @@
                 camOffset -= 5;
         }
 
-        if (leftButton.isDown && !player.isAttacking && player.canMove)
-        {
-            player.facingRight = false;
-            player.scale.x = -1;
+        //esecuzione animazioni
 
-            if(canJump && !player.climbing)
-            {
-                player.body.velocity.x = -PLAYER_SPEED;
-                player.animations.play('walk');
-            }
-            else if(player.climbing)
-            {
-                player.body.velocity.x = -PLAYER_SPEED;
-            }
-            else
-            {
-                if(player.body.velocity.x > -PLAYER_SPEED)
-                {
-                    player.body.velocity.x += -PLAYER_ACC;
-                }
-                else
-                {
-                    player.body.velocity.x = -PLAYER_SPEED;
-                }
-            }
-        }
-        else if (rightButton.isDown && !player.isAttacking && player.canMove)
-        {
-            player.facingRight = true;
-            player.scale.x = 1;
-
-            if(canJump  && !player.climbing)
-            {
-                player.body.velocity.x = PLAYER_SPEED;
-                player.animations.play('walk');
-            }
-            else if(player.climbing)
-            {
-                player.body.velocity.x = PLAYER_SPEED;
-            }
-            else{
-                if(player.body.velocity.x < PLAYER_SPEED){
-                    player.body.velocity.x += PLAYER_ACC;
-                }
-                else{
-                    player.body.velocity.x = PLAYER_SPEED;
-                }
-            }
-        }
-        else
-        {
-            if(!player.isAttacking && !player.climbing)
-                player.animations.play('idle');
-
-            if(canJump && player.canMove)
-                player.body.velocity.x = 0;
+        //salendo
+        if(player.status.isAscending && !player.status.isAttacking & !player.status.isClimbing){
+            player.animations.play('up');
         }
 
-        if (canJump && !player.climbing)
-        {
-            player.jumping = false;
+        //scendendo
+        if(player.status.isDescending && !player.status.isAttacking & !player.status.isClimbing){
+            player.animations.play('down');
         }
 
-        if (jumpButton.isDown && canJump && !player.climbing)
-        {
-            player.jumping = true;
-            startJump = game.time.now;
-            player.body.position.y -= 1;
-            game.time.events.add(JUMP_TIME, function () { player.jumping = false;}, this);
-
+        //camminata
+        if(player.status.isWalking && !player.status.isAttacking && !player.status.isJumping){
+            player.animations.play('walk');
         }
 
-        if (player.jumping && jumpButton.isDown)
-        {
-            player.body.velocity.y = - (PLAYER_JUMP * Math.sqrt((game.time.now - startJump)/JUMP_TIME));
-        }
-        else
-        {
-            player.jumping = false;
-        }
-
-        if (jumpButton.isDown && player.climbing)
-        {
-
-            player.climbing = false;
-            player.jumping = true;
-            startJump = game.time.now;
-            game.time.events.add(JUMP_TIME, function () { player.jumping = false;}, this);
-
-        }
-
-        if(attackButton.isDown && !player.isAttacking && !player.climbing)
-        {
-            player.isAttacking = true;
-            player.animations.play('attack');
-            hitbox.scale.x = -1 + 2*player.facingRight;
+        //se non ci sono animazioni in corso, esegui idle
+        if(Object.values(player.status).find(element => element == true) === undefined){
+            player.animations.play('idle');
         }
     },
 
@@ -597,7 +687,7 @@
         }
     },
 
-    enemyHit: function(p) {
+    enemyHit: function(p, h) {
         if(!p.invincible){
             p.health -= 1;
             if (p.health <= 0){
@@ -610,27 +700,27 @@
                 p.alpha = 0.8;
                 game.time.events.add(PLAYER_INVTIME, function(){p.invincible = false; p.alpha = 1; p.canMove = true;})
 
-                if(p.facingRight){
-                    p.body.velocity.x = -KNOCKBACK_X;
-                    p.canMove = false;
-                    console.log('knocked left');
+                if(h.knockback != null){
+                    if(p.facingRight){
+                        p.body.velocity.x = -KNOCKBACK_X;
+                        p.canMove = false;
+                    }
+                    else{
+                        p.body.velocity.x = KNOCKBACK_X;
+                        p.canMove = false;
+                    }
+                    p.body.velocity.y = -KNOCKBACK_Y;
+                    p.canJump = false;
+                    p.status.isJumping = true;
                 }
-                else{
-                    p.body.velocity.x = KNOCKBACK_X;
-                    p.canMove = false;
-                    console.log('knocked right');
-                }
-                p.body.velocity.y = -KNOCKBACK_Y;
-                p.jumping = true;
             }
             updateLife();
-            console.log('lives: '+player.lives+'; health: '+player.health);
         }
     },
 
     climb: function(p, s) {
         if(s.active){
-            if(player.climbing)
+            if(player.status.isClimbing)
             {
                 if(upButton.isDown){
                     player.body.velocity.y = -CLIMB_SPEED;
@@ -644,12 +734,12 @@
             }
             else {
                 if(upButton.isDown){
-                    player.climbing = true;
+                    player.status.isClimbing = true;
                 }
             }
         }
         else{
-          player.climbing = false;
+          player.status.isClimbing = false;
         }
     },
 
@@ -669,11 +759,6 @@
             w.active = false;
             game.add.tween(w).to( { alpha: 0 }, 500, Phaser.Easing.Linear.None, true);
         }
-    },
-
-    enemyShot: function (p, b) {
-        console.log('ouchie ouch');
-        b.destroy();
     },
 
     render: function() {
@@ -698,8 +783,11 @@
             }, this);
         }, this);
         //game.debug.body(patrols, '#00ffff', false);
-
-        game.debug.spriteCoords(bg, 5, 100);
+        game.debug.text('isAscending: '+player.status.isAscending, 5, 100);
+        game.debug.text('isDescending: '+player.status.isDescending, 5, 115);
+        game.debug.text('isJumping: '+player.status.isJumping, 5, 130);
+        game.debug.text('isWalking: '+player.status.isWalking, 5, 145);
+        game.debug.text('canJump:  '+player.canJump, 5, 160);
     }
 };
 
@@ -724,4 +812,67 @@ function bgParallax() {
     var offX = game.camera.x/game.world.width * maxOffX;
     var offY = game.camera.y/game.world.height * maxOffY;
     bg.cameraOffset.setTo(-offX, -offY);
+}
+
+function nextLine(content, textbox) {
+
+    if (content.lineIndex === content.text.length)
+    {
+        endText(textbox);
+        return;
+    }
+
+    textbox.text = "";
+
+    content.line = content.text[content.lineIndex].split(' ');
+
+    content.wordIndex = 0;
+
+    game.time.events.repeat(content.wordDelay, content.line.length, nextWord, this, content, textbox);
+
+    content.lineIndex++;
+
+}
+
+function nextWord(content, textbox) {
+
+    textbox.text = textbox.text.concat(content.line[content.wordIndex] + " ");
+
+    content.wordIndex++;
+
+    //  Last word?
+    if (content.wordIndex === content.line.length)
+    {
+        //  Add a carriage return
+        textbox.text = textbox.text.concat("\n");
+
+        //  Get the next line after the lineDelay amount of ms has elapsed
+        textbox.parent.next. alpha = 1;
+        attackButton.onDown.addOnce(function(){nextLine(arguments[1], arguments[2]); textbox.parent.next. alpha = 0;}, this, 0, content, textbox);
+    }
+
+}
+
+function startText(content, textbox) {
+
+    textbox.parent.alpha = 1;
+
+    content.text = content;
+    content.line = [];
+
+    content.wordIndex = 0;
+    content.lineIndex = 0;
+
+    content.wordDelay = 120;
+    content.lineDelay = 1000;
+
+    nextLine(content, textbox);
+
+}
+
+function endText(textbox) {
+    textbox.parent.alpha = 0;
+    textbox.text = "";
+
+    player.canMove = true;
 }

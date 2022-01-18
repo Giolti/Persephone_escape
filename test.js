@@ -437,7 +437,6 @@ function enemyHit(p, h) {
             p.invincible = true;
             p.alpha = 0.6;
             game.camera.shake(0.01, 300);
-            game.time.events.add(PLAYER_LOCKOUT, function(){p.canMove = true;})
             game.time.events.add(PLAYER_INVTIME, function(){p.invincible = false; p.alpha = 1;})
 
             if(h.knockback != null){
@@ -451,6 +450,7 @@ function enemyHit(p, h) {
                 }
                 p.body.velocity.y = -KNOCKBACK_Y;
                 p.jumping = true;
+                game.time.events.add(PLAYER_LOCKOUT, function(){p.canMove = true;})
             }
         }
         updateLife();

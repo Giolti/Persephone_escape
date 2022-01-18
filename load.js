@@ -7,7 +7,9 @@ var loadState = {
 
         game.load.image('home', 'sprites/menu.png');
 
-        game.load.spritesheet('player', 'sprites/player demo.png', 113*3, 54*3, 26);
+        game.load.spritesheet('slides', 'sprites/storia/storia.png', 1024, 768, 4);
+
+        game.load.spritesheet('player', 'sprites/player demo.png', 113*3, 54*3);
         game.load.spritesheet('fiore', 'sprites/persefone/fiore.png', 16*3, 16*3, 6);
 
         game.load.spritesheet('petal', 'sprites/petals/petal.png', 16*3, 16*3, 3);
@@ -16,7 +18,7 @@ var loadState = {
         game.load.tilemap('map', 'sprites/tilemap/tilemap.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.tilemap('test', 'sprites/tilemap/test.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('tileset cave', 'sprites/tilemap/tileset cave.png');
-        game.load.image('bg', 'sprites/background.png');
+        game.load.image('bg', 'sprites/sfondo.png');
 
         game.load.spritesheet('spark1', 'sprites/sparks/spark1.png', 76, 68, 3);
         game.load.spritesheet('spark2', 'sprites/sparks/spark2.png', 60, 60, 4);
@@ -41,6 +43,9 @@ var loadState = {
         game.load.spritesheet('explosion', 'sprites/hades/explosion.png', 162, 183);
         game.load.image('bossbar', 'sprites/hades/healthbar.png');
         game.load.image('platbar', 'sprites/hades/platbar.png');
+
+        game.load.image('text', 'sprites/text/textbox.png');
+        game.load.spritesheet('pressJ', 'sprites/text/jbutton.png', 12, 14, 2);
 
         game.stage.scale.pageAlignHorizontally = true;
         game.stage.scale.pageAlignVeritcally = true;

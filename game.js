@@ -13,7 +13,8 @@ PLAYER_INVTIME = 1000;
 ENEMY_INVTIME = 500;
 
 PLAYER_SPEED = 500;
-PLAYER_JUMP = 1100;
+PLAYER_JUMP = 1400;
+PLAYER_SHORTJUMP = 800;
 PLAYER_ACC = 40;
 CLIMB_SPEED = 400;
 JUMP_TIME = 250;
@@ -47,41 +48,45 @@ PLATFORM_STOPTIME = 1000;
 MAXCAMOFFSET = 100;
 
 /*init variabili*/
- var player;
- var hitbox;
+var slides;
 
- var healthbar;
+var player;
+var hitbox;
 
- var patrols;
- var turrets;
+var healthbar;
 
- var hades;
- var colonne;
+var patrols;
+var turrets;
 
- var petals;
- var platforms;
- var stairs;
- var buds;
- var walls;
+var hades;
+var colonne;
 
- var sparks1;
- var sparks2;
- var sparks3;
+var petals;
+var platforms;
+var stairs;
+var buds;
+var walls;
 
- var cursors;
- var jumpButton;
- var attackButton;
+var sparks1;
+var sparks2;
+var sparks3;
 
- var map;
- var shadow;
- var layer;
- var bg;
+var cursors;
+var jumpButton;
+var attackButton;
 
- var camOffset;
- var startJump;
+var map;
+var shadow;
+var layer;
+var bg;
 
- var temp;
- var canJump;
+var camOffset;
+var startJump;
+
+var temp;
+var canJump;
+
+var text;
 
 var game = new Phaser.Game(1024, 768, Phaser.AUTO, 'game');
 
@@ -89,6 +94,7 @@ game.state.add('boot', bootState);
 game.state.add('load', loadState);
 game.state.add('menu', menuState);
 game.state.add('play', playState);
+game.state.add('story', storyState);
 game.state.add('credit', creditState);
 game.state.add('test', testState);
 

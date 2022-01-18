@@ -11,7 +11,27 @@ var menuState = {
       gioca.height = 26;
       gioca.inputEnabled = true;
       gioca.events.onInputUp.add(function() {
-          game.state.start('play');
+          storia.inputEnabled = false;
+          crediti.inputEnabled = false;
+          game.camera.fade('#000000', 500);
+          game.camera.onFadeComplete.addOnce(function(){
+              game.state.start('play');
+              game.camera.flash('#000000', 500);
+          })
+      })
+
+      var storia = game.add.sprite(431, 433);
+      storia.width = 161;
+      storia.height = 26;
+      storia.inputEnabled = true;
+      storia.events.onInputUp.add(function() {
+          gioca.inputEnabled = false;
+          crediti.inputEnabled = false;
+          game.camera.fade('#000000', 500);
+          game.camera.onFadeComplete.addOnce(function(){
+              game.state.start('story');
+              game.camera.flash('#000000', 500);
+          })
       })
 
       var crediti = game.add.sprite(419, 574);
@@ -19,7 +39,13 @@ var menuState = {
       crediti.height = 26;
       crediti.inputEnabled = true;
       crediti.events.onInputUp.add(function() {
-          game.state.start('credit');
+          gioca.inputEnabled = false;
+          storia.inputEnabled = false;
+          game.camera.fade('#000000', 500);
+          game.camera.onFadeComplete.addOnce(function(){
+              game.state.start('credit');
+              game.camera.flash('#000000', 500);
+          })
       })
 
       var test = game.add.sprite(448, 656);
