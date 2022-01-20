@@ -62,14 +62,18 @@ var hades;
 var colonne;
 
 var petals;
+var flowers;
+
 var platforms;
-var stairs;
+var stairs = [];
 var buds;
 var walls;
 
 var sparks1;
 var sparks2;
 var sparks3;
+var cables;
+var cableResp;
 
 var cursors;
 var jumpButton;

@@ -9,11 +9,11 @@ var loadState = {
 
         game.load.spritesheet('slides', 'sprites/storia/storia.png', 1024, 768, 4);
 
-        game.load.spritesheet('player', 'sprites/player demo.png', 113*3, 54*3);
+        game.load.spritesheet('player', 'sprites/persefone/persefone.png', 113*3, 54*3);
         game.load.spritesheet('fiore', 'sprites/persefone/fiore.png', 16*3, 16*3, 6);
 
-        game.load.spritesheet('petal', 'sprites/petals/petal.png', 16*3, 16*3, 3);
-        game.load.image('petal', 'sprites/petals/petal light.png')
+        game.load.spritesheet('petal', 'sprites/petals/petal.png', 64, 70, 3);
+        game.load.spritesheet('flower', 'sprites/petals/flower.png', 192, 210);
 
         game.load.tilemap('map', 'sprites/tilemap/tilemap.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.tilemap('test', 'sprites/tilemap/test.json', null, Phaser.Tilemap.TILED_JSON);
@@ -23,12 +23,14 @@ var loadState = {
         game.load.spritesheet('spark1', 'sprites/sparks/spark1.png', 76, 68, 3);
         game.load.spritesheet('spark2', 'sprites/sparks/spark2.png', 60, 60, 4);
         game.load.spritesheet('spark3', 'sprites/sparks/spark3.png', 60, 60, 4);
+        game.load.spritesheet('cables', 'sprites/sparks/cavi.png', 48*3, 24*3);
 
         game.load.spritesheet('platform1', 'sprites/moving plat.png', 64*3, 48*3, 4);
 
         game.load.image('stairs1', 'sprites/stairs demo 1.png');
+        game.load.spritesheet('rampicante', 'sprites/liane/rampicante.png', 32*3, 16*3);
 
-        game.load.image('bud', 'sprites/bud demo.png');
+        game.load.image('bud', 'sprites/liane/germoglio.png');
 
         game.load.image('wall1', 'sprites/secrets/wall 1.png')
 

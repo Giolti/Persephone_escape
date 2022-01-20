@@ -25,7 +25,7 @@
         map.setCollisionBetween(88, 120, true, 'cave');
 
 
-        /*player hitbox sprite*/{
+        /*player sprite*/{
         player = game.add.sprite(9*48, 159*48, 'player', 0);
         player.y -= player.height;
 
@@ -37,6 +37,7 @@
 
         player.facingRight = true;
         player.anchor.x = (42*3)/player.width;
+        }
 
         /*stato animazioni*/
         player.status = {
@@ -53,33 +54,15 @@
             player.y = 159*48 - player.height;
         }
 
-        hitbox = game.add.sprite();
-        player.addChild(hitbox);
-        hitbox.y = 54;
-        }
-
         /*player animations*/{
         player.animations.add('idle', [0,1,2,3], 4);
         player.animations.add('walk', [4,5,6,7,8,9,10,11], 15);
-        attackAnim = player.animations.add('attack', [12,13,14,15,16,17,18,19,20,21,22,23,24,25], 30);
-        jumpAnim = player.animations.add('jump', [26,26,26], 60);
-        player.animations.add('up', [27]);
-        player.animations.add('down', [28]);
-
-        /*hitbox activation*/{
-        attackAnim.onStart.add(function () {
-            game.time.events.add(250, function () { hitbox.active = true; }, this);
-        }, this);
-        }
-
-        /*hitbox deactivation*/{
-        attackAnim.onComplete.add(function () {
-            hitbox.active = false;
-            player.status.isAttacking = false;
-            /*player.weapon = new Phaser.Rectangle;*/
-
-        }, this);
-        }
+        player.animations.add('attack-run', [12,13,14,15,16,17,18,19], 15);
+        player.animations.add('attack', [20,21,22,23,24,25,26,27], 15)
+        player.animations.add('jump', [28,28,28], 60);
+        player.animations.add('up', [29]);
+        player.animations.add('down', [30]);
+        player.animations.add('climb', [31,32,33,34,35,36], 8);
         }
 
         /*life hud*/
@@ -93,15 +76,19 @@
         }
 
 
-        /*graphics enable*/{
+        /*physics enable*/{
         game.physics.arcade.enable(player);
-        game.physics.arcade.enable(hitbox);
         game.physics.arcade.enable(layer);
         }
 
         /*hitbox physics*/{
-        hitbox.body.setSize(44*3,12*3);
-        hitbox.body.offset.setTo(22*3, 0);
+        hitbox = game.add.sprite();
+        player.addChild(hitbox);
+
+        game.physics.arcade.enable(hitbox);
+
+        hitbox.body.setSize(52*3,19*3);
+        hitbox.body.offset.setTo(5*3, 18*3);
         hitbox.active = false;
         }
 
@@ -117,24 +104,48 @@
         petals = game.add.physicsGroup();
 
         petals.create(12*48, 142*48, 'petal', 0);
+        petals.create(75*48, 68*48, 'petal', 0);
+        petals.create(33*48, 53*48, 'petal', 0);
+        petals.create(87*48, 40*48, 'petal', 0);
 
         petals.forEach(function(petal){
-            petal.animations.add('petal', [0,1,2,1], 5, true);
-            petal.animations.play('petal');
+            petal.animations.add('petal', [0,1,2,1], 5, true).play();
 
-            petal.add
+            petal.anchor.setTo(0.5, 0.5);
+
+            petal.body.setSize(18, 18);
+            petal.body.offset.setTo(23, 26);
+
+            petal.active = true;
         }, this);
+        }
 
-        petals.setAll('anchor.x', 0.5);
-        petals.setAll('anchor.y', 0.5);
+        /*fiori*/{
+        flowers = game.add.physicsGroup();
 
+        flowers.create(75*48, 163*48, 'flower', 0);
+        flowers.create(28*48, 94*48, 'flower', 0);
+        flowers.create(90*48, 59*48, 'flower', 0);
+
+        flowers.forEach(function(flower){
+            flower.animations.add('flower', [0,1,2,1], 5, true).play();
+
+            flower.anchor.setTo(0.5, 0.5);
+
+            flower.body.setSize(48, 48);
+            flower.body.offset.setTo(72, 78);
+
+            flower.active = true;
+        })
         }
 
         /*piattaforme*/{
         platforms = game.add.physicsGroup();
 
-        platform1 = platforms.create(50*48, 155*48, 'platform1', 0);
+        platform1 = platforms.create(40*48, 155*48, 'platform1', 0);
         platform2 = platforms.create(45*48, 110*48, 'platform1', 0);
+        platform3 = platforms.create(39*48, 74*48, 'platform1', 0);
+        platform4 = platforms.create(72*48, 61*48, 'platform1', 0);
 
         platforms.forEach(function(plat){
             plat.animations.add('plat', [0,1,2,3], 5, true);
@@ -152,31 +163,62 @@
         platform2.startX = 45*48;
         platform2.endX = platform2.startX + 40*48;
 
+        platform3.startX = 24*48;
+        platform3.endX = platform3.startX + 35*48;
+
+        platform4.startX = 72*48;
+        platform4.endX = platform4.startX + 11*48;
+
         platforms.setAll('body.immovable', true);
         }
 
-        /*stairs*/{
-        stairs = game.add.physicsGroup();
+        /*ascensore*/{
 
-        stairs1 = stairs.create(27*48, 117*48, 'stairs1');
-        stairs1.active = false;
-        stairs1.alpha = 0;
         }
 
-        /*buds*/{
+        /*scale*/{
+        stairs[0] = game.add.physicsGroup();
+        stairs[1] = game.add.physicsGroup();
+
+        stairs[0].x = 27*48;
+        stairs[0].y = 115*48;
+
+        stairs[1].x = 15*48;
+        stairs[1].y = 84*48;
+
+        stairs[0].createMultiple(29, 'rampicante', 1, true);
+        stairs[1].createMultiple(30, 'rampicante', 1, true);
+
+        for(var j = 0; j < stairs.length; j++){
+            for(var i = 0; i < stairs[j].length; i++){
+                stairs[j].getAt(i).y = i*16*3;
+            }
+            stairs[j].getAt(0).frame = 0;
+            stairs[j].getAt(stairs[j].length - 1).frame = 2;
+
+            stairs[j].active = false;
+            stairs[j].setAll('alpha', 0);
+            }
+        }
+
+        /*germogli*/{
         buds = game.add.physicsGroup();
 
-        bud1 = buds.create(27*48, 115*48, 'bud');
-        bud1.active = true;
-        bud1.stairs = 0;
+        buds.create(27*48, 115*48, 'bud');
+        buds.create(15*48, 84*48, 'bud');
+
+        for(var i = 0; i < buds.length; i++){
+            buds.getAt(i).active = true;
+            buds.getAt(i).stairs = i;
+        }
         }
 
         /*secret walls*/{
         walls = game.add.physicsGroup();
 
-        wall1 = walls.create(71*48, 157*48, 'wall1');
-        wall1.body.setSize(10*48, 10*48);
-        wall1.body.offset.setTo(1*48, 0);
+        wall1 = walls.create(70*48, 157*48, 'wall1');
+        wall1.body.setSize(9*48, 12*48);
+        wall1.body.offset.setTo(2*48, 0);
 
         walls.setAll('body.immovable', true);
         walls.forEach(function(wall)
@@ -193,13 +235,17 @@
         patrols.create(25*48, 142*48, 'patrol');
         patrols.create(50*48, 130*48, 'patrol');
         patrols.create(82*48, 97*48, 'patrol');
+        patrols.create(73*48, 52*48, 'patrol');
+        patrols.create(42*48, 46*48, 'patrol');
 
         var patrolsMovePoints = [
             42, 56,
             79, 88,
             10, 20,
             40, 61,
-            74, 91
+            74, 91,
+            72, 83,
+            36, 53
         ];
         temp = 0;
 
@@ -244,6 +290,10 @@
         turrets.create(40*48, 115*48 - 21, 'turret');
         turrets.create(83*48, 113*48 - 21, 'turret');
         turrets.create(102*48, 97*48 - 21, 'turret');
+        turrets.create(86*48, 79*48 - 21, 'turret');
+        turrets.create(21*48, 69*48 - 21, 'turret');
+        turrets.create(34*48, 40*48 - 21, 'turret');
+        turrets.create(30*48, 28*48 - 21, 'turret');
 
         turrets.forEach(function(turret)
         {
@@ -275,12 +325,66 @@
             turret.weapon.bullets.setAll('body.offset.x', 3*3);
             turret.weapon.bullets.setAll('body.offset.y', 3*3);
 
+            turret.weapon.bullets.forEach(function(bullet){
+                bullet.isBullet = true;
+            })
+
             turret.rangeX = TURRET_RANGE_X;
             turret.rangeY = TURRET_RANGE_Y;
         }, this);
         }
 
-        /*sparks*/{
+        /*cavi*/{
+            cables = game.add.physicsGroup();
+
+            for (var i = 0; i<3; i++){
+                cables.create((93+i*3)*48, 166*48, 'cables');
+            }
+
+            for (var i = 0; i<9; i++){
+                cables.create((33+i*3)*48, 82*48, 'cables');
+            }
+
+            function randomCable(){
+                var temp = Math.floor(Math.random()*3) + 1;
+
+                var time = Math.random()*800 + 200;
+
+                game.time.events.add(time, function(){
+                    this.animations.play('cable'+temp);
+                }, this);
+            }
+
+            cables.forEach(function(cable){
+                cable.animations.add('cable1', [1,2,0], 50).play().onComplete.add(randomCable, cable);
+                cable.animations.add('cable2', [3,4,0], 50).play().onComplete.add(randomCable, cable);
+                cable.animations.add('cable3', [5,6,0], 50).play().onComplete.add(randomCable, cable);
+
+
+            });
+
+            cableResp = game.add.physicsGroup();
+
+            var cablePoint = [91, 165,
+                              104, 165,
+                              31, 81,
+                              62, 81];
+
+            cableResp.create(90*48, 156*48).body.setSize(3*48, 9*48);
+            cableResp.create(102*48, 156*48).body.setSize(3*48, 9*48);
+
+            cableResp.create(30*48, 69*48).body.setSize(3*48, 12*48);
+            cableResp.create(60*48, 69*48).body.setSize(3*48, 12*48);
+
+            for(var i = 0; i < cableResp.length; i++){
+                var temp = cableResp.getAt(i);
+
+                temp.respX = cablePoint[2*i]*48;
+                temp.respY = cablePoint[2*i + 1]*48;
+            }
+        }
+
+        /*scintille*/{
         sparks1 = game.add.group();
         sparks1.create(23*64, 109*64, 'spark1', 1);
 
@@ -382,28 +486,29 @@
 
             if(player.canMove && !player.status.isAttacking && !player.status.isClimbing)
             {
-                player.canMove = false;
-                player.canJump = false;
                 player.status.isAttacking = true;
 
-                game.time.events.add(250, function () { hitbox.active = true; }, this);
+                if(player.isWalking){
+                    player.animations.play('attack-run');
+                }
+                else{
+                    player.animations.play('attack');
+                }
 
-                attackAnim.onComplete.add(function () {
-                    hitbox.active = false;
-                    player.canMove = true;
-                    player.status.isAttacking = false;
-                }, this);
-
-                player.animations.play('attack');
                 hitbox.scale.x = -1 + 2*player.facingRight;
             }
 
         }
 
         player.jump = function(){
-            if(player.canMove && player.canJump && !player.status.isJumping && !player.status.isClimbing && !player.status.isAttacking){
+            if(player.canMove && player.canJump && !player.status.isJumping && !player.status.isClimbing){
+
                 player.status.isJumping = true;
-                jumpAnim.play();
+
+                if(!player.status.isAttacking){
+                    player.animations.play('jump');
+                }
+
                 game.time.events.add(85, function(){
                     if (jumpButton.isDown){
                         player.body.velocity.y = -PLAYER_JUMP;
@@ -414,46 +519,31 @@
                     player.status.isAscending = true;
                 });
             }
+            else if(player.status.isClimbing){
+                player.status.isClimbing = false;
+            }
         }
 
         player.goRight = function(){
-            if(!player.status.isAttacking){
-                if(player.canMove){
-                    player.facingRight = true;
-                    player.scale.x = 1;
-                }
-            }else{
-                attackAnim.onComplete.addOnce(function(){
-                    player.facingRight = true;
-                    player.scale.x = 1;
-                })
+            if(player.canMove){
+                player.facingRight = true;
             }
         }
 
         player.goLeft = function(){
-            if(!player.status.isAttacking){
-                if(player.canMove){
-                    player.facingRight = false;
-                    player.scale.x = -1;
-                }
-            }else{
-                attackAnim.onComplete.addOnce(function(){
-                    player.facingRight = false;
-                    player.scale.x = -1;
-                })
-            }
+          if(player.canMove){
+              player.facingRight = false;
+          }
         }
 
         player.move = function(){
             if(player.canMove){
-                if(player.status.isJumping){
+                if(player.status.isJumping || player.status.isDescending){
                     player.body.velocity.x += PLAYER_ACC * (-1 + 2*player.facingRight);
                 }
                 else{
-                    if(!player.status.isAttacking){
-                        player.body.velocity.x = PLAYER_SPEED * (-1 + 2*player.facingRight);
-                        player.status.isWalking = true;
-                    }
+                    player.body.velocity.x = PLAYER_SPEED * (-1 + 2*player.facingRight);
+                    player.status.isWalking = true;
                 }
             }else{
                 player.stop();
@@ -461,7 +551,7 @@
         }
 
         player.stop = function(){
-            if(player.canJump){
+            if(player.canJump || player.status.isClimbing){
                 player.body.velocity.x = 0;
             }
             player.status.isWalking = false;
@@ -492,10 +582,19 @@
         player.canJump = false;
         game.physics.arcade.collide(player, layer, function(){if(player.body.blocked.down)player.canJump = true;});
         game.physics.arcade.collide(patrols, layer);
+
         game.physics.arcade.overlap(player, platforms);
         game.physics.arcade.collide(player, platforms, function(){player.canJump = true;}, function(p, plat){
             return plat.body.touching.up;
         });
+
+        game.physics.arcade.overlap(player, cables, shock);
+        game.physics.arcade.overlap(player, cableResp, checkPoint);
+
+        game.physics.arcade.overlap(player, petals, pickPetal);
+        game.physics.arcade.overlap(player, flowers, pickFlower);
+
+        game.physics.arcade.overlap(player, patrols, this.enemyHit);
 
         walls.forEach(function(wall)
         {
@@ -503,7 +602,7 @@
                 game.physics.arcade.collide(player, wall);
         }, this);
 
-        game.physics.arcade.overlap(hitbox, buds, this.grow, function(){return hitbox.active;});
+        game.physics.arcade.overlap(hitbox, buds, grow, function(){return hitbox.active;});
         game.physics.arcade.overlap(hitbox, patrols, this.hit, function(){return hitbox.active;});
         game.physics.arcade.overlap(hitbox, turrets, this.hit, function(){return hitbox.active;});
         game.physics.arcade.overlap(hitbox, walls, this.fadeWall, function(){return hitbox.active;});
@@ -599,7 +698,7 @@
         }
 
         //lascia liane
-        if(!game.physics.arcade.overlap(player, stairs, this.climb)){
+        if(!game.physics.arcade.overlap(player, stairs[0], this.climb)){
             player.status.isClimbing = false;
         }
 
@@ -608,6 +707,11 @@
             player.body.gravity.y = 0;
         else
             player.body.gravity.y = GRAVITY;
+
+        //fine attacco
+        if([19,27].includes(player.frame)){
+            player.status.isAttacking = false;
+        }
 
         //no input orizzontale
         if(rightButton.isUp && leftButton.isUp){
@@ -639,7 +743,7 @@
         }
 
         //offset camera
-        if(player.facingRight)  {
+        if(player.scale.x == 1)  {
 
             if(camOffset < MAXCAMOFFSET)
                 camOffset += 5;
@@ -653,6 +757,11 @@
 
         //esecuzione animazioni
 
+        //direzione
+        if(!player.status.isAttacking){
+            player.scale.x = -1 + 2*player.facingRight;
+        }
+
         //salendo
         if(player.status.isAscending && !player.status.isAttacking & !player.status.isClimbing){
             player.animations.play('up');
@@ -663,9 +772,42 @@
             player.animations.play('down');
         }
 
+        if(player.status.isClimbing){
+            if(player.body.velocity.y != 0){
+                player.animations.play('climb');
+            }
+            else{
+                player.frame = 29;
+            }
+        }
+
         //camminata
-        if(player.status.isWalking && !player.status.isAttacking && !player.status.isJumping){
+        if(player.status.isWalking && !player.status.isAttacking && !player.status.isJumping && !player.status.isDescending && !player.status.isAscending){
             player.animations.play('walk');
+        }
+
+        //attacco
+        if(player.status.isAttacking){
+            if(player.status.isWalking && !player.status.isJumping){
+                if(player.animations.currentAnim.name == 'attack'){
+                    var temp = player.frame;
+
+                    player.animations.play('attack-run').setFrame(temp - 8);
+                }
+            }
+            else if(player.animations.currentAnim.name == 'attack-run'){
+                var temp = player.frame;
+
+                player.animations.play('attack').setFrame(temp + 8);
+            }
+        }
+
+        //hitbox
+        if([18,19,25,26].includes(player.frame)){
+            hitbox.active = true;
+        }
+        else{
+            hitbox.active = false;
         }
 
         //se non ci sono animazioni in corso, esegui idle
@@ -697,7 +839,8 @@
             }
             else{
                 p.invincible = true;
-                p.alpha = 0.8;
+                p.alpha = 0.6;
+                game.camera.shake(0.01, 300);
                 game.time.events.add(PLAYER_INVTIME, function(){p.invincible = false; p.alpha = 1; p.canMove = true;})
 
                 if(h.knockback != null){
@@ -713,13 +856,16 @@
                     p.canJump = false;
                     p.status.isJumping = true;
                 }
+                if(h.isBullet != null){
+                    h.kill();
+                }
             }
             updateLife();
         }
     },
 
     climb: function(p, s) {
-        if(s.active){
+        if(s.parent.active){
             if(player.status.isClimbing)
             {
                 if(upButton.isDown){
@@ -743,16 +889,6 @@
         }
     },
 
-    grow: function(p, b) {
-        if(b.active){
-            activeStairs = stairs.getAt(b.stairs);
-
-            b.active = false;
-            activeStairs.active = true;
-            activeStairs.alpha = 1;
-        }
-    },
-
     fadeWall: function (h, w) {
         if(w.active)
         {
@@ -763,26 +899,9 @@
 
     render: function() {
 
-        //game.debug.spriteBounds(player, '#0000ff', false);
-        //game.debug.spriteBounds(hitbox, '#ffff00', false);
-        //if(hitbox.active)
-          //game.debug.body(hitbox, '#ff0000', false);
-        game.debug.body(player, '#00ffff', false);
-        platforms.forEach(function(plat){
-            game.debug.body(plat, '#0000ff', false);
-        }, this);
-        patrols.forEach(function(patrol){
-            game.debug.spriteBounds(patrol, '#ff00bb', false);
-            game.debug.body(patrol, '#ff0000', false);
-            if(patrol.hitbox.active)
-                game.debug.body(patrol.hitbox, '#ff0000', false);
-        }, this);
-        turrets.forEach(function(turret){
-            turret.weapon.bullets.forEach(function(bullet){
-                game.debug.body(bullet, '#ff0000', true);
-            }, this);
-        }, this);
-        //game.debug.body(patrols, '#00ffff', false);
+        if(hitbox.active){
+            game.debug.body(hitbox, '#ff0000', false);
+        }
         game.debug.text('isAscending: '+player.status.isAscending, 5, 100);
         game.debug.text('isDescending: '+player.status.isDescending, 5, 115);
         game.debug.text('isJumping: '+player.status.isJumping, 5, 130);
@@ -875,4 +994,80 @@ function endText(textbox) {
     textbox.text = "";
 
     player.canMove = true;
+}
+
+function shock(){
+    player.health -= 1;
+    if (player.health <= 0){
+        player.lives -= 1;
+        player.health = PLAYER_MAXLIVES;
+        player.respawn();
+    }
+    else{
+        player.invincible = true;
+        player.canMove = false;
+
+        game.camera.shake(0.01, 300);
+        game.camera.flash(0x5ec4ff, 500);
+        game.camera.onFlashComplete.addOnce(function(){
+            player.invincible = false;
+            player.canMove = true;
+        })
+
+        player.x = player.respX;
+        player.y = player.respY - player.height;
+    }
+    updateLife();
+}
+
+function checkPoint(p, check){
+    p.respX = check.respX;
+    p.respY = check.respY;
+}
+
+function pickPetal(p, petal){
+    if(p.health < PLAYER_MAXHEALTH && petal.active){
+        p.health += 1;
+        updateLife();
+
+        petal.active = false;
+        petal.alpha = 0;
+    }
+}
+
+function pickFlower(p, flower){
+    if(flower.active){
+        var i = healthbar.length;
+        healthbar.create(i*16*3 + i*2*3, 0, 'fiore', 5);
+        healthbar.getAt(i).num = i + 1;
+
+        flower.active = false;
+        flower.alpha = 0;
+
+        p.lives += 1;
+
+        updateLife();
+    }
+}
+
+function grow(p, b) {
+    if(b.active){
+        activeStairs = stairs[b.stairs];
+
+        b.active = false;
+        b.alpha = 0;
+
+        activeStairs.active = true;
+
+        growStep(activeStairs, activeStairs.length)
+    }
+}
+
+function growStep(stairs, n){
+    stairs.getAt(stairs.length - n).alpha = 1;
+    console.log(arguments);
+
+    if(n > 1){
+        game.time.events.add(100, growStep, this, stairs, n-1);
+    }
 }
