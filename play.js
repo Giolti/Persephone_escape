@@ -594,7 +594,7 @@
         game.physics.arcade.overlap(player, petals, pickPetal);
         game.physics.arcade.overlap(player, flowers, pickFlower);
 
-        game.physics.arcade.overlap(player, patrols, this.enemyHit);
+        game.physics.arcade.overlap(player, patrols, this.enemyHit, function(p, e){return e.active;});
 
         walls.forEach(function(wall)
         {
