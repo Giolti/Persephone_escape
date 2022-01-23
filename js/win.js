@@ -1,13 +1,18 @@
 winState = {
     create: function(){
-        game.camera.flash(0xffffff, 1000);
+
 
         var scene;
 
         if(player.lives > 2){
+            game.camera.flash(0xffffff, 1000);
             scene = game.add.sprite(0,0,'win');
-        }else{
+        }else if(player.lives > 0){
+            game.camera.flash(0xffffff, 1000);
             scene = game.add.sprite(0,0,'badend');
+        }else{
+            game.camera.flash(0x000000, 1000);
+            scene = game.add.sprite(0,0, 'gameover');
         }
 
         var menubutton = game.add.sprite(0, 0);

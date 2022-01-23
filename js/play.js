@@ -111,17 +111,22 @@ var playState = {
                     game.camera.fade(0x000000, 3000);
                     game.camera.onFadeComplete.addOnce(function(){
 
-                        player.x = player.startX;
-                        player.y = player.startY;
-                        player.status.respawning = false;
+                        if(player.lives > 0){
+                            player.x = player.startX;
+                            player.y = player.startY;
+                            player.status.respawning = false;
 
-                        black.alpha = 0;
+                            black.alpha = 0;
 
-                        game.camera.flash(0xffffff, 1000);
-                        game.camera.onFlashComplete.addOnce(function(){
-                            player.canMove = true;
-                            player.invincible = false;
-                        })
+                            game.camera.flash(0xffffff, 1000);
+                            game.camera.onFlashComplete.addOnce(function(){
+                                player.canMove = true;
+                                player.invincible = false;
+                            })
+                        }
+                        else{
+                            game.state.start('win')
+                        }
 
                     });
                 });
@@ -446,6 +451,15 @@ var playState = {
                 this.alpha = 0;
             };
 
+            patrol.updateLife = function(invtime){
+                this.tint = 0xff0000;
+                game.time.events.add(250, function(){
+                    this.tint = 0xffffff;
+                }, this)
+                this.invincible = true;
+                game.time.events.add(invtime, function(){this.invincible = false;}, this);
+            }
+
             patrol.respawn = function(){
                 this.active = true;
                 this.patrolling = true;
@@ -494,6 +508,15 @@ var playState = {
             turret.death = function(){
                 this.active = false;
                 this.alpha = 0;
+            }
+
+            turret.updateLife = function(invtime){
+                this.tint = 0xff0000;
+                game.time.events.add(250, function(){
+                    this.tint = 0xffffff;
+                }, this)
+                this.invincible = true;
+                game.time.events.add(invtime, function(){this.invincible = false;}, this);
             }
 
             turret.respawn = function(){
@@ -546,6 +569,15 @@ var playState = {
                     this.active = false;
                     this.alpha = 0;
                 };
+
+                titan.updateLife = function(invtime){
+                    this.tint = 0xff0000;
+                    game.time.events.add(250, function(){
+                        this.tint = 0xffffff;
+                    }, this)
+                    this.invincible = true;
+                    game.time.events.add(invtime, function(){this.invincible = false;}, this);
+                }
 
                 titan.claw = game.add.sprite(40*3, 0, 'claw');
                 titan.addChild(titan.claw);
@@ -610,7 +642,7 @@ var playState = {
             }
         }
 
-        /*scintille*/{
+        /*scintille{
         sparks1 = game.add.group();
         sparks1.create(23*64, 109*64, 'spark1', 1);
 
@@ -671,7 +703,7 @@ var playState = {
                 spark.play('spark3');
             }, this);
         }, this);
-        }
+      }*/
 
         /*fiaccole speciali*/{
             torchesEx = game.add.physicsGroup();
@@ -1247,7 +1279,7 @@ var playState = {
         //collisioni proiettili ade
         hades.weapon.bullets.forEach(function(bullet){
             game.physics.arcade.collide(bullet, layer, function(b){b.kill();});
-            game.physics.arcade.overlap(player, bullet, this.enemyHit);
+            game.physics.arcade.overlap(player, bullet, enemyHit);
         });
 
         /*parallax*/
@@ -1531,12 +1563,7 @@ var playState = {
                 e.death();
             }
             else{
-                e.tint = 0xff0000;
-                game.time.events.add(250, function(){
-                    e.tint = 0xffffff;
-                })
-                e.invincible = true;
-                game.time.events.add(ENEMY_INVTIME, function(){e.invincible = false;});
+                e.updateLife(HIT_INVTIME);
             }
         }
     },
@@ -1647,7 +1674,7 @@ function startText(content, textbox, callback) {
     content.wordIndex = 0;
     content.lineIndex = 0;
 
-    content.wordDelay = 120;
+    content.wordDelay = 70;
     content.lineDelay = 1000;
 
     nextLine(content, textbox, callback);
@@ -1665,25 +1692,27 @@ function endText(textbox, callback) {
 }
 
 function shock(){
-    player.health -= 1;
-    if (player.health <= 0){
-        player.lives -= 1;
-        player.health = PLAYER_MAXLIVES;
-        player.respawn();
-    }
-    else{
-        player.invincible = true;
-        player.canMove = false;
+    if(!player.invincible){
+        player.health -= 1;
+        if (player.health <= 0){
+            player.lives -= 1;
+            player.health = PLAYER_MAXHEALTH;
+            player.respawn();
+        }
+        else{
+            player.invincible = true;
+            player.canMove = false;
 
-        game.camera.shake(0.01, 300);
-        game.camera.flash(0x5ec4ff, 500);
-        game.camera.onFlashComplete.addOnce(function(){
-            player.invincible = false;
-            player.canMove = true;
-        })
+            game.camera.shake(0.01, 300);
+            game.camera.flash(0x5ec4ff, 500);
+            game.camera.onFlashComplete.addOnce(function(){
+                player.invincible = false;
+                player.canMove = true;
+            })
 
-        player.x = player.respX;
-        player.y = player.respY - player.height;
+            player.x = player.respX;
+            player.y = player.respY - player.height;
+        }
     }
     updateLife();
 }
@@ -1878,7 +1907,7 @@ function shot(target, bullet){
         target.health -= bullet.damage;
         bullet.kill();
         if(target.updateLife != null && target.updateLife != undefined){
-            target.updateLife();
+            target.updateLife(SHOT_INVTIME);
         }
         if(target.health <= 0){
             target.death();
